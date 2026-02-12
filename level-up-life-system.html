@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0e27">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Level Up - Life System</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-dark: #0a0e27;
+            --bg-card: #131829;
+            --bg-hover: #1a1f3a;
+            --accent: #00d4ff;
+            --accent-glow: rgba(0, 212, 255, 0.3);
+            --gold: #ffd700;
+            --danger: #ff4757;
+            --success: #2ed573;
+            --text: #e8e8e8;
+            --text-dim: #8b92b0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 2px solid var(--accent);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .level-badge {
+            background: linear-gradient(135deg, var(--accent), #0066ff);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 0 20px var(--accent-glow);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px var(--accent-glow); }
+            50% { box-shadow: 0 0 30px var(--accent-glow), 0 0 40px var(--accent-glow); }
+        }
+
+        .timer-section {
+            text-align: right;
+            font-size: 0.9em;
+        }
+
+        .timer-label {
+            color: var(--text-dim);
+            font-size: 0.8em;
+        }
+
+        .timer {
+            color: var(--gold);
+            font-weight: bold;
+            font-size: 1.2em;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .date-display {
+            color: var(--text-dim);
+            font-size: 0.75em;
+            margin-top: 2px;
+        }
+
+        /* XP Bar */
+        .xp-container {
+            margin-top: 15px;
+        }
+
+        .xp-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            color: var(--text-dim);
+        }
+
+        .xp-bar-bg {
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            border: 1px solid var(--accent);
+        }
+
+        .xp-bar-fill {
+            background: linear-gradient(90deg, var(--accent), #0066ff);
+            height: 100%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 20px var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 15px;
+            background: var(--bg-card);
+            margin: 10px;
+            border-radius: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 12px;
+            background: var(--bg-dark);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .stat-value.gold { color: var(--gold); }
+        .stat-value.success { color: var(--success); }
+
+        /* Quest Sections */
+        .quest-section {
+            margin: 15px 10px;
+        }
+
+        .section-header {
+            background: var(--bg-card);
+            padding: 12px 15px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-bottom: none;
+        }
+
+        .section-header.main { 
+            background: linear-gradient(135deg, #1a1f3a, #0a0e27);
+            border-color: var(--gold);
+        }
+
+        .section-header.training {
+            background: linear-gradient(135deg, #1a3a1f, #0a0e27);
+            border-color: var(--success);
+        }
+
+        .quest-container {
+            background: var(--bg-card);
+            border-radius: 0 0 10px 10px;
+            padding: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-top: none;
+        }
+
+        .quest-item {
+            background: var(--bg-dark);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .quest-item:active {
+            transform: scale(0.98);
+        }
+
+        .quest-item.completed {
+            opacity: 0.5;
+            border-left-color: var(--success);
+        }
+
+        .quest-item.main-quest {
+            border-left-color: var(--gold);
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.05), var(--bg-dark));
+        }
+
+        .quest-item.training-quest {
+            border-left-color: var(--success);
+        }
+
+        .quest-item.punishment {
+            border-left-color: var(--danger);
+            background: linear-gradient(90deg, rgba(255, 71, 87, 0.05), var(--bg-dark));
+        }
+
+        .quest-checkbox {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            background: transparent;
+            cursor: pointer;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .quest-checkbox.checked {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .quest-checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+        }
+
+        .quest-content {
+            flex: 1;
+        }
+
+        .quest-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 0.95em;
+        }
+
+        .quest-desc {
+            font-size: 0.8em;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+
+        .quest-xp {
+            background: linear-gradient(135deg, var(--gold), #ff9500);
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Training Day Indicator */
+        .training-day-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--success), #20bf6b);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .training-day-badge.restday {
+            background: linear-gradient(135deg, #8b92b0, #5a5f7d);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-dim);
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, var(--accent), #0066ff);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 0.95em;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #c23616);
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--accent), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-text {
+            color: var(--text-dim);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* Settings */
+        .settings-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px var(--accent-glow);
+            z-index: 99;
+        }
+
+        .settings-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border-top: 2px solid var(--accent);
+            padding: 20px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 99;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .settings-panel.show {
+            transform: translateY(0);
+        }
+
+        .weekly-quests {
+            margin-top: 10px;
+        }
+
+        .weekly-quest-item {
+            background: var(--bg-dark);
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid #9b59b6;
+        }
+
+        .progress-text {
+            font-size: 0.85em;
+            color: var(--text-dim);
+        }
+
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                padding: 10px;
+                margin: 10px 5px;
+            }
+            
+            .stat-card {
+                padding: 8px;
+            }
+            
+            .stat-value {
+                font-size: 1.2em;
+            }
+        }
+
+        .info-text {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 0.85em;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div class="level-badge">
+                <span id="levelDisplay">LVL 1</span>
+            </div>
+            <div class="timer-section">
+                <div class="timer-label">Daily Reset</div>
+                <div class="timer" id="resetTimer">--:--:--</div>
+                <div class="date-display" id="dateDisplay">--</div>
+            </div>
+        </div>
+        <div class="xp-container">
+            <div class="xp-label">
+                <span>XP Fortschritt</span>
+                <span id="xpText">0 / 100</span>
+            </div>
+            <div class="xp-bar-bg">
+                <div class="xp-bar-fill" id="xpBar" style="width: 0%;">
+                    <span id="xpPercent">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Streak</div>
+            <div class="stat-value gold">🔥 <span id="streakDisplay">1</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total XP</div>
+            <div class="stat-value" id="totalXPDisplay">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Quests</div>
+            <div class="stat-value success" id="questsDisplay">0</div>
+        </div>
+    </div>
+
+    <!-- Main Quest Section -->
+    <div class="quest-section">
+        <div class="section-header main">
+            🎯 Main Quest - Trading
+        </div>
+        <div class="quest-container" id="mainQuestContainer">
+            <!-- Main quest will be generated here -->
+        </div>
+    </div>
+
+    <!-- Training Section -->
+    <div class="quest-section">
+        <div class="section-header training">
+            💪 Training
+            <span class="training-day-badge" id="trainingDayBadge">TAG A - PULL</span>
+        </div>
+        <div class="quest-container" id="trainingContainer">
+            <!-- Training quests will be generated here -->
+        </div>
+    </div>
+
+    <!-- Daily Quests Section -->
+    <div class="quest-section">
+        <div class="section-header">
+            ⚡ Daily Quests
+        </div>
+        <div class="quest-container" id="dailyQuestsContainer">
+            <!-- Daily quests will be generated here -->
+        </div>
+    </div>
+
+    <!-- Punishment Quests Section -->
+    <div class="quest-section" id="punishmentSection" style="display: none;">
+        <div class="section-header" style="border-color: var(--danger);">
+            ⚠️ Strafquests
+        </div>
+        <div class="quest-container" id="punishmentContainer">
+            <!-- Punishment quests will be generated here -->
+        </div>
+    </div>
+
+    <!-- Weekly Quests Section -->
+    <div class="quest-section">
+        <div class="section-header" style="border-color: #9b59b6;">
+            📅 Weekly Quests
+        </div>
+        <div class="quest-container">
+            <div class="weekly-quests" id="weeklyQuestsContainer">
+                <!-- Weekly quests will be generated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Extra Quests Section -->
+    <div class="quest-section">
+        <div class="section-header" style="border-color: #f39c12;">
+            ⭐ Extra Quests
+        </div>
+        <div class="quest-container" id="extraQuestsContainer">
+            <!-- Extra quests will be generated here -->
+        </div>
+    </div>
+
+    <!-- Settings Button -->
+    <div class="settings-btn" onclick="toggleSettings()">
+        ⚙️
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <h2 style="margin-bottom: 15px;">⚙️ Einstellungen</h2>
+        <div class="info-text">
+            <strong class="highlight">Training:</strong> Flexibel 3-4x/Woche<br>
+            <strong class="highlight">Ziel:</strong> Ästhetik + Skills + Kraft<br>
+            <strong class="highlight">Focus:</strong> Gold, Aktien, ETFs, (Crypto)
+        </div>
+        <button class="btn btn-danger" onclick="resetAllProgress()">
+            🔄 Komplett Reset
+        </button>
+        <button class="btn" onclick="toggleSettings()" style="margin-top: 10px;">
+            Schließen
+        </button>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal" id="levelUpModal">
+        <div class="modal-content">
+            <div class="modal-title">🎉 LEVEL UP!</div>
+            <div class="modal-text" id="levelUpText">Du bist jetzt Level 2!</div>
+            <button class="btn" onclick="closeLevelUpModal()">Weiter</button>
+        </div>
+    </div>
+
+    <div class="modal" id="streakLostModal">
+        <div class="modal-content">
+            <div class="modal-title">💔 Streak Verloren</div>
+            <div class="modal-text">Du warst inaktiv. Strafquests wurden aktiviert!</div>
+            <button class="btn btn-danger" onclick="closeStreakLostModal()">Verstanden</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // GAME STATE
+        // ============================================
+        let gameState = {
+            level: 1,
+            xp: 0,
+            totalXP: 0,
+            maxDailyXP: 100,
+            streak: 1,
+            lastActiveDate: new Date().toDateString(),
+            completedQuests: 0,
+            
+            // Quest completion tracking
+            mainQuestCompleted: false,
+            dailyQuestsCompleted: [],
+            trainingCompleted: false,
+            punishmentCompleted: [],
+            weeklyProgress: {
+                training: 0,
+                tradingSessions: 0
+            },
+            extraQuestsCompleted: [],
+            
+            // Training tracking
+            lastTrainingDay: null,
+            trainingDays: 0,
+            currentTrainingType: 'A' // A = Pull, B = Push
+        };
+
+        // ============================================
+        // MAIN QUEST PROGRESSION SYSTEM
+        // ============================================
+        const mainQuestProgression = [
+            // Basics (Level 1-5)
+            { level: 1, title: "Support & Resistance festigen", desc: "Identifiziere 5 S/R Zonen in einem aktuellen Chart (Gold/EUR/USD)", xp: 50, category: "basics" },
+            { level: 1, title: "Fibonacci Retracement üben", desc: "Zeichne Fib-Levels in 3 verschiedenen Charts und dokumentiere", xp: 45, category: "basics" },
+            { level: 2, title: "RSI Deep Dive", desc: "Analysiere RSI Divergenzen in 3 Charts (überkauft/überverkauft)", xp: 50, category: "basics" },
+            { level: 2, title: "Moving Averages kombinieren", desc: "Teste 20/50/200 MA Strategie auf TradingView", xp: 45, category: "basics" },
+            { level: 3, title: "Fair Value Gap identifizieren", desc: "Finde 3 FVGs in aktuellen Charts und markiere sie", xp: 55, category: "intermediate" },
+            
+            // Intermediate (Level 3-7)
+            { level: 3, title: "Liquidity Zones erkennen", desc: "Markiere Liquiditätszonen (Buy/Sell Side) in Gold-Chart", xp: 55, category: "intermediate" },
+            { level: 4, title: "Candlestick Patterns Quiz", desc: "Erkenne 10 Candlestick Patterns in echten Charts", xp: 50, category: "intermediate" },
+            { level: 4, title: "Chart Patterns Basics", desc: "Lerne Dreiecke, Flaggen, Kopf-Schulter (Video + 2 Beispiele)", xp: 55, category: "intermediate" },
+            { level: 5, title: "Volume Trading Einführung", desc: "TJR Bootcamp: Volume Analysis Video schauen + Notizen", xp: 50, category: "intermediate" },
+            { level: 5, title: "Paper Trade dokumentieren", desc: "Führe 1 Paper Trade durch mit vollständiger Analyse (Entry/Exit/SL)", xp: 60, category: "intermediate" },
+            { level: 6, title: "Risk Management rechnen", desc: "Berechne Position Sizing für 3 verschiedene Trades (1-2% Risiko)", xp: 55, category: "intermediate" },
+            { level: 6, title: "Multi-Asset Analyse", desc: "Vergleiche Gold vs. S&P500 vs. EUR/USD Korrelation", xp: 55, category: "advanced" },
+            
+            // Advanced (Level 7-10)
+            { level: 7, title: "Trading Journal starten", desc: "Erstelle Template und dokumentiere ersten Trade komplett", xp: 60, category: "advanced" },
+            { level: 7, title: "Order Flow Basics", desc: "TJR Bootcamp: Order Flow Video + Beispielanalyse", xp: 60, category: "advanced" },
+            { level: 8, title: "Psychologie: FOMO & Revenge Trading", desc: "Lerne über Trading-Psychologie (Video/Artikel) + Reflexion", xp: 50, category: "advanced" },
+            { level: 8, title: "Backtesting Simulation", desc: "Teste deine Strategie auf 20 historischen Setups (manuell)", xp: 60, category: "advanced" },
+            { level: 9, title: "Gold Trading Strategie", desc: "Entwickle spezifische Gold-Trading-Strategie (Confluence)", xp: 60, category: "advanced" },
+            { level: 9, title: "Crypto Volatilität verstehen", desc: "Analysiere Bitcoin Volatilität vs. traditionelle Assets", xp: 55, category: "advanced" },
+            { level: 10, title: "ETF Portfolio Analyse", desc: "Recherchiere 3 ETFs für langfristiges Investment", xp: 60, category: "advanced" },
+            
+            // Expert (Level 10+)
+            { level: 10, title: "Full Market Analyse", desc: "Komplette Multi-Timeframe Analyse (15min/1h/4h/Daily)", xp: 60, category: "expert" },
+            { level: 11, title: "Live Trading Simulation", desc: "Simuliere Live-Trading-Session 2h mit Journal", xp: 60, category: "expert" },
+            { level: 11, title: "Advanced Risk Management", desc: "Portfolio-Risiko über mehrere Positionen berechnen", xp: 60, category: "expert" },
+            { level: 12, title: "Trading Plan erstellen", desc: "Schreibe deinen kompletten Trading Plan (Strategie/Regeln/Ziele)", xp: 60, category: "expert" }
+        ];
+
+        // ============================================
+        // DAILY QUESTS POOL
+        // ============================================
+        const dailyQuestsPool = [
+            { id: 'water', title: '💧 Hydration', desc: '2L Wasser trinken heute', xp: 10 },
+            { id: 'learn', title: '📚 Trading Lernen', desc: '30min TradingView Analyse oder TJR Video', xp: 15 },
+            { id: 'clean', title: '🧹 Zimmer aufräumen', desc: 'Ordnung im Workspace schaffen', xp: 8 },
+            { id: 'meditate', title: '🧘 Meditation', desc: '10min Meditation für Fokus', xp: 12 },
+            { id: 'gf', title: '❤️ Freundin Time', desc: 'Quality Time oder nette Geste', xp: 10 },
+            { id: 'family', title: '👨‍👩‍👦 Familie', desc: 'Zeit mit Familie verbringen', xp: 10 },
+            { id: 'healthy', title: '🥗 Gesund essen', desc: 'Mindestens 2 gesunde Mahlzeiten', xp: 10 },
+            { id: 'focus', title: '🎯 Focus Block', desc: '1h Deep Work ohne Ablenkung', xp: 15 },
+            { id: 'noscroll', title: '📵 Kein Scrollen', desc: 'Max 30min Social Media heute', xp: 12 },
+            { id: 'chart', title: '📊 Chart Time', desc: 'Analysiere 3 Charts heute', xp: 15 },
+            { id: 'news', title: '📰 Markt News', desc: 'Lies wichtigste Finanznews heute', xp: 8 },
+            { id: 'sleep', title: '😴 Schlaf', desc: 'Vor 23:30 ins Bett gehen', xp: 10 }
+        ];
+
+        // ============================================
+        // TRAINING SYSTEM
+        // ============================================
+        const trainingPrograms = {
+            A: { // PULL
+                name: 'TAG A - PULL',
+                exercises: [
+                    { name: 'Muscle Ups', sets: 2, xp: 8 },
+                    { name: 'Weighted Pull-ups', sets: 2, xp: 8, alternative: 'Normale Pull-ups' },
+                    { name: 'Farmer Walk', sets: 2, xp: 6 },
+                    { name: 'Hammer Curls', sets: 2, xp: 5 },
+                    { name: 'Langhantel Curls', sets: 2, xp: 5 },
+                    { name: 'Seitheben', sets: 3, xp: 6 }
+                ]
+            },
+            B: { // PUSH
+                name: 'TAG B - PUSH',
+                exercises: [
+                    { name: 'Dips', sets: 2, xp: 8 },
+                    { name: 'Bench Press / Brustpresse', sets: 2, xp: 8, alternative: 'Push-ups' },
+                    { name: 'Ring Stabilität', sets: 2, xp: 6 },
+                    { name: 'Seitheben', sets: 3, xp: 6 },
+                    { name: 'Trizeps Pushdown', sets: 2, xp: 5 }
+                ]
+            }
+        };
+
+        // ============================================
+        // PUNISHMENT QUESTS
+        // ============================================
+        const punishmentQuests = [
+            { id: 'p1', title: '💪 50 Push-ups', desc: 'Strafe für Inaktivität', xp: 10 },
+            { id: 'p2', title: '📚 Extra Lernsession', desc: '45min zusätzliches Trading Lernen', xp: 15 },
+            { id: 'p3', title: '🧘 Zwangs-Meditation', desc: '20min Meditation zur Disziplin', xp: 12 }
+        ];
+
+        // ============================================
+        // WEEKLY QUESTS
+        // ============================================
+        const weeklyQuests = [
+            { id: 'w1', title: '💪 3x Training', target: 3, current: 0, desc: 'Trainiere mindestens 3x diese Woche' },
+            { id: 'w2', title: '📊 5 Trading Sessions', target: 5, current: 0, desc: 'Mindestens 5 Analyse-Sessions' },
+            { id: 'w3', title: '📝 Wochenanalyse', target: 1, current: 0, desc: 'Schreibe Reflexion über Trading-Woche' }
+        ];
+
+        // ============================================
+        // EXTRA QUESTS
+        // ============================================
+        const extraQuests = [
+            { id: 'e1', title: '📖 Chart Pattern Deep Dive', desc: 'Lerne alle wichtigen Chart Patterns auswendig', xp: 30 },
+            { id: 'e2', title: '🎯 Front Lever Training', desc: 'Trainiere Front Lever Progression 20min', xp: 25 },
+            { id: 'e3', title: '💰 ETF Research', desc: 'Recherchiere 5 verschiedene ETFs ausführlich', xp: 30 },
+            { id: 'e4', title: '🏃 L-Sit Practice', desc: 'Übe L-Sit Holds (5x max. Zeit)', xp: 20 },
+            { id: 'e5', title: '📊 Backtest Session', desc: 'Backteste Strategie auf 50 Setups', xp: 35 },
+            { id: 'e6', title: '🧠 Psychology Masterclass', desc: 'Schaue kompletten Trading-Psychologie Kurs', xp: 30 }
+        ];
+
+        // ============================================
+        // INIT & LOAD
+        // ============================================
+        function init() {
+            loadGameState();
+            checkDailyReset();
+            updateAllUI();
+            startTimer();
+            generateQuests();
+        }
+
+        function loadGameState() {
+            const saved = localStorage.getItem('levelUpLifeSystem');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                gameState = { ...gameState, ...parsed };
+            }
+        }
+
+        function saveGameState() {
+            localStorage.setItem('levelUpLifeSystem', JSON.stringify(gameState));
+        }
+
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            const lastActive = new Date(gameState.lastActiveDate);
+            const todayDate = new Date(today);
+            const daysDiff = Math.floor((todayDate - lastActive) / (1000 * 60 * 60 * 24));
+
+            if (daysDiff > 1) {
+                // Streak verloren - Strafquests aktivieren
+                gameState.streak = 1;
+                showStreakLostModal();
+            } else if (daysDiff === 1) {
+                // Neuer Tag
+                gameState.streak++;
+            }
+
+            if (gameState.lastActiveDate !== today) {
+                // Daily Reset
+                gameState.lastActiveDate = today;
+                gameState.xp = 0;
+                gameState.mainQuestCompleted = false;
+                gameState.dailyQuestsCompleted = [];
+                gameState.trainingCompleted = false;
+                gameState.punishmentCompleted = [];
+                saveGameState();
+            }
+        }
+
+        // ============================================
+        // QUEST GENERATION
+        // ============================================
+        function generateQuests() {
+            generateMainQuest();
+            generateDailyQuests();
+            generateTrainingQuests();
+            generateWeeklyQuests();
+            generateExtraQuests();
+            checkPunishmentQuests();
+        }
+
+        function generateMainQuest() {
+            const container = document.getElementById('mainQuestContainer');
+            
+            // Find quest for current level
+            const availableQuests = mainQuestProgression.filter(q => q.level === gameState.level);
+            const quest = availableQuests[Math.floor(Math.random() * availableQuests.length)] || mainQuestProgression[0];
+            
+            container.innerHTML = `
+                <div class="quest-item main-quest ${gameState.mainQuestCompleted ? 'completed' : ''}" onclick="toggleMainQuest()">
+                    <div class="quest-checkbox ${gameState.mainQuestCompleted ? 'checked' : ''}"></div>
+                    <div class="quest-content">
+                        <div class="quest-title">${quest.title}</div>
+                        <div class="quest-desc">${quest.desc}</div>
+                    </div>
+                    <div class="quest-xp">${quest.xp} XP</div>
+                </div>
+            `;
+        }
+
+        function generateDailyQuests() {
+            const container = document.getElementById('dailyQuestsContainer');
+            
+            // Select 5 random daily quests
+            const shuffled = [...dailyQuestsPool].sort(() => 0.5 - Math.random());
+            const selected = shuffled.slice(0, 5);
+            
+            container.innerHTML = selected.map(quest => `
+                <div class="quest-item ${gameState.dailyQuestsCompleted.includes(quest.id) ? 'completed' : ''}" 
+                     onclick="toggleDailyQuest('${quest.id}', ${quest.xp})">
+                    <div class="quest-checkbox ${gameState.dailyQuestsCompleted.includes(quest.id) ? 'checked' : ''}"></div>
+                    <div class="quest-content">
+                        <div class="quest-title">${quest.title}</div>
+                        <div class="quest-desc">${quest.desc}</div>
+                    </div>
+                    <div class="quest-xp">${quest.xp} XP</div>
+                </div>
+            `).join('');
+        }
+
+        function generateTrainingQuests() {
+            const container = document.getElementById('trainingContainer');
+            const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+            
+            // Check if today should be a rest day (simple logic: if 2+ days trained this week)
+            const trainingThisWeek = gameState.trainingDays || 0;
+            const isRestDay = trainingThisWeek >= 3 && (today === 0 || today === 2 || today === 4);
+            
+            if (isRestDay && !gameState.trainingCompleted) {
+                document.getElementById('trainingDayBadge').textContent = 'RESTDAY';
+                document.getElementById('trainingDayBadge').classList.add('restday');
+                container.innerHTML = `
+                    <div class="info-text">
+                        🛌 <strong>Restday!</strong> Gönn deinem Körper Erholung.<br>
+                        Du hast diese Woche bereits ${trainingThisWeek}x trainiert.
+                    </div>
+                `;
+                return;
+            }
+            
+            document.getElementById('trainingDayBadge').classList.remove('restday');
+            
+            const program = trainingPrograms[gameState.currentTrainingType];
+            document.getElementById('trainingDayBadge').textContent = program.name;
+            
+            container.innerHTML = program.exercises.map(ex => `
+                <div class="quest-item training-quest">
+                    <div class="quest-content">
+                        <div class="quest-title">${ex.name}</div>
+                        <div class="quest-desc">${ex.sets} Sätze${ex.alternative ? ` (oder ${ex.alternative})` : ''}</div>
+                    </div>
+                    <div class="quest-xp">${ex.xp} XP</div>
+                </div>
+            `).join('') + `
+                <button class="btn" onclick="completeTraining()">
+                    Training abschließen (${program.exercises.reduce((sum, ex) => sum + ex.xp, 0)} XP)
+                </button>
+            `;
+        }
+
+        function generateWeeklyQuests() {
+            const container = document.getElementById('weeklyQuestsContainer');
+            
+            container.innerHTML = weeklyQuests.map(quest => {
+                const progress = gameState.weeklyProgress[quest.id.replace('w', '')] || 0;
+                const percent = Math.min((progress / quest.target) * 100, 100);
+                
+                return `
+                    <div class="weekly-quest-item">
+                        <div>
+                            <div class="quest-title">${quest.title}</div>
+                            <div class="progress-text">${progress} / ${quest.target}</div>
+                        </div>
+                        <div style="min-width: 60px; text-align: right;">
+                            <div style="font-size: 1.2em; font-weight: bold; color: var(--accent);">
+                                ${Math.floor(percent)}%
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function generateExtraQuests() {
+            const container = document.getElementById('extraQuestsContainer');
+            
+            container.innerHTML = extraQuests.map(quest => `
+                <div class="quest-item ${gameState.extraQuestsCompleted.includes(quest.id) ? 'completed' : ''}"
+                     onclick="toggleExtraQuest('${quest.id}', ${quest.xp})">
+                    <div class="quest-checkbox ${gameState.extraQuestsCompleted.includes(quest.id) ? 'checked' : ''}"></div>
+                    <div class="quest-content">
+                        <div class="quest-title">${quest.title}</div>
+                        <div class="quest-desc">${quest.desc}</div>
+                    </div>
+                    <div class="quest-xp">${quest.xp} XP</div>
+                </div>
+            `).join('');
+        }
+
+        function checkPunishmentQuests() {
+            const section = document.getElementById('punishmentSection');
+            const container = document.getElementById('punishmentContainer');
+            
+            const today = new Date().toDateString();
+            const lastActive = new Date(gameState.lastActiveDate);
+            const daysDiff = Math.floor((new Date(today) - lastActive) / (1000 * 60 * 60 * 24));
+            
+            if (daysDiff > 1) {
+                section.style.display = 'block';
+                container.innerHTML = punishmentQuests.map(quest => `
+                    <div class="quest-item punishment ${gameState.punishmentCompleted.includes(quest.id) ? 'completed' : ''}"
+                         onclick="togglePunishmentQuest('${quest.id}', ${quest.xp})">
+                        <div class="quest-checkbox ${gameState.punishmentCompleted.includes(quest.id) ? 'checked' : ''}"></div>
+                        <div class="quest-content">
+                            <div class="quest-title">${quest.title}</div>
+                            <div class="quest-desc">${quest.desc}</div>
+                        </div>
+                        <div class="quest-xp">${quest.xp} XP</div>
+                    </div>
+                `).join('');
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        // ============================================
+        // QUEST TOGGLES
+        // ============================================
+        function toggleMainQuest() {
+            if (gameState.mainQuestCompleted) {
+                gameState.mainQuestCompleted = false;
+                const quest = mainQuestProgression.find(q => q.level === gameState.level);
+                removeXP(quest ? quest.xp : 50);
+            } else {
+                gameState.mainQuestCompleted = true;
+                const quest = mainQuestProgression.find(q => q.level === gameState.level);
+                addXP(quest ? quest.xp : 50);
+            }
+            saveGameState();
+            generateMainQuest();
+            updateAllUI();
+        }
+
+        function toggleDailyQuest(id, xp) {
+            if (gameState.dailyQuestsCompleted.includes(id)) {
+                gameState.dailyQuestsCompleted = gameState.dailyQuestsCompleted.filter(q => q !== id);
+                removeXP(xp);
+            } else {
+                gameState.dailyQuestsCompleted.push(id);
+                addXP(xp);
+            }
+            saveGameState();
+            generateDailyQuests();
+            updateAllUI();
+        }
+
+        function toggleExtraQuest(id, xp) {
+            if (gameState.extraQuestsCompleted.includes(id)) {
+                gameState.extraQuestsCompleted = gameState.extraQuestsCompleted.filter(q => q !== id);
+                removeXP(xp);
+            } else {
+                gameState.extraQuestsCompleted.push(id);
+                addXP(xp);
+            }
+            saveGameState();
+            generateExtraQuests();
+            updateAllUI();
+        }
+
+        function togglePunishmentQuest(id, xp) {
+            if (gameState.punishmentCompleted.includes(id)) {
+                gameState.punishmentCompleted = gameState.punishmentCompleted.filter(q => q !== id);
+                removeXP(xp);
+            } else {
+                gameState.punishmentCompleted.push(id);
+                addXP(xp);
+            }
+            saveGameState();
+            checkPunishmentQuests();
+            updateAllUI();
+        }
+
+        function completeTraining() {
+            if (gameState.trainingCompleted) return;
+            
+            const program = trainingPrograms[gameState.currentTrainingType];
+            const totalXP = program.exercises.reduce((sum, ex) => sum + ex.xp, 0);
+            
+            gameState.trainingCompleted = true;
+            gameState.trainingDays = (gameState.trainingDays || 0) + 1;
+            
+            // Alternate training type
+            gameState.currentTrainingType = gameState.currentTrainingType === 'A' ? 'B' : 'A';
+            
+            addXP(totalXP);
+            
+            // Update weekly quest
+            if (!gameState.weeklyProgress) gameState.weeklyProgress = {};
+            gameState.weeklyProgress['1'] = (gameState.weeklyProgress['1'] || 0) + 1;
+            
+            saveGameState();
+            generateTrainingQuests();
+            generateWeeklyQuests();
+            updateAllUI();
+        }
+
+        // ============================================
+        // XP SYSTEM
+        // ============================================
+        function addXP(amount) {
+            const remaining = gameState.maxDailyXP - gameState.xp;
+            const toAdd = Math.min(amount, remaining);
+            
+            gameState.xp += toAdd;
+            gameState.totalXP += toAdd;
+            gameState.completedQuests++;
+            
+            // Check level up (every 100 total XP = 1 level)
+            const newLevel = Math.floor(gameState.totalXP / 100) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                showLevelUpModal();
+            }
+        }
+
+        function removeXP(amount) {
+            gameState.xp = Math.max(0, gameState.xp - amount);
+            gameState.totalXP = Math.max(0, gameState.totalXP - amount);
+            gameState.completedQuests = Math.max(0, gameState.completedQuests - 1);
+            
+            // Recalculate level
+            gameState.level = Math.floor(gameState.totalXP / 100) + 1;
+        }
+
+        // ============================================
+        // UI UPDATES
+        // ============================================
+        function updateAllUI() {
+            // Level
+            document.getElementById('levelDisplay').textContent = `LVL ${gameState.level}`;
+            
+            // XP Bar
+            const xpPercent = (gameState.xp / gameState.maxDailyXP) * 100;
+            document.getElementById('xpBar').style.width = xpPercent + '%';
+            document.getElementById('xpText').textContent = `${gameState.xp} / ${gameState.maxDailyXP}`;
+            document.getElementById('xpPercent').textContent = Math.floor(xpPercent) + '%';
+            
+            // Stats
+            document.getElementById('streakDisplay').textContent = gameState.streak;
+            document.getElementById('totalXPDisplay').textContent = gameState.totalXP;
+            document.getElementById('questsDisplay').textContent = gameState.completedQuests;
+        }
+
+        function startTimer() {
+            updateTimer();
+            setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            
+            const diff = tomorrow - now;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('resetTimer').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            // Date display
+            const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+            document.getElementById('dateDisplay').textContent = now.toLocaleDateString('de-DE', options);
+        }
+
+        // ============================================
+        // MODALS
+        // ============================================
+        function showLevelUpModal() {
+            document.getElementById('levelUpText').textContent = `Du bist jetzt Level ${gameState.level}! 🎯`;
+            document.getElementById('levelUpModal').classList.add('show');
+        }
+
+        function closeLevelUpModal() {
+            document.getElementById('levelUpModal').classList.remove('show');
+            generateMainQuest(); // Generate new main quest for new level
+        }
+
+        function showStreakLostModal() {
+            document.getElementById('streakLostModal').classList.add('show');
+        }
+
+        function closeStreakLostModal() {
+            document.getElementById('streakLostModal').classList.remove('show');
+        }
+
+        // ============================================
+        // SETTINGS
+        // ============================================
+        function toggleSettings() {
+            document.getElementById('settingsPanel').classList.toggle('show');
+        }
+
+        function resetAllProgress() {
+            if (confirm('Wirklich ALLES zurücksetzen? Dieser Schritt kann nicht rückgängig gemacht werden!')) {
+                localStorage.removeItem('levelUpLifeSystem');
+                location.reload();
+            }
+        }
+
+        // ============================================
+        // INIT ON LOAD
+        // ============================================
+        window.addEventListener('load', init);
+
+        // Save on page unload
+        window.addEventListener('beforeunload', saveGameState);
+    </script>
+</body>
+</html>
